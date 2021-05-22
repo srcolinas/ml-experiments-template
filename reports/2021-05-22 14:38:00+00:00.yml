@@ -1,0 +1,5 @@
+mean absolute error:
+- split: train
+  value: 6623.077445544555
+- split: test
+  value: 20175.49806451613
