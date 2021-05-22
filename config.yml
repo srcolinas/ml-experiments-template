@@ -1,10 +1,7 @@
 estimator:
   - name: age-extractor
   - name: column-transformer
-  - name: random-forest-regressor
-    hparams:
-      n_estimators: 100
-      max_depth: null
+  - name: linear-regressor
 
 data:
   filepath: ./dataset.csv

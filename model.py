@@ -7,6 +7,7 @@ import typing as t
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.compose import ColumnTransformer
 from sklearn.ensemble import RandomForestRegressor
+from sklearn.linear_model import LinearRegression
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder, OrdinalEncoder, StandardScaler
 
@@ -27,7 +28,8 @@ def build_estimator(config: EstimatorConfig):
 
 def get_estimator_mapping():
     return {
-        "linear-regressor": RandomForestRegressor,
+        "random-forest-regressor": RandomForestRegressor,
+        "linear-regressor": LinearRegression,
         "age-extractor": AgeExtractor,
         "column-transformer": CustomColumnTransformer,
     }
