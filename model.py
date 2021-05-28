@@ -4,7 +4,7 @@ Here we code what our model is. It may include all of feature engineering.
 """
 import typing as t
 
-from sklearn.base import BaseEstimator, TransformerMixin
+from sklearn.base import BaseEstimator, RegressorMixin, TransformerMixin
 from sklearn.compose import ColumnTransformer
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.linear_model import LinearRegression
@@ -91,3 +91,13 @@ class CustomColumnTransformer(BaseEstimator, TransformerMixin):
 
     def transform(self, X):
         return self._column_transformer.transform(X)
+
+
+class ModePerNeighborBaseline(BaseEstimator, RegressorMixin):
+    def fit(self, X, y):
+        """Computes the mode of the price per neighbor on training data. """
+        raise NotImplementedError
+
+    def predict(self, X):
+        """Predicts the mode computed in the fit method. """
+        raise NotImplementedError

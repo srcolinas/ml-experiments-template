@@ -13,7 +13,7 @@ metrics:
 search:
   jobs: -1
   grid:
-    - name: random-forest-regressor
+    - name: linear-regressor
       params:
         n_estimators: [50, 100, 200]
         max_depth: [null, 10, 20, 30, 60]
