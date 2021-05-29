@@ -1,7 +1,5 @@
 estimator:
-  - name: age-extractor
-  - name: column-transformer
-  - name: random-forest-regressor
+  - name: average-per-neighborhood-baseline
 
 data:
   filepath: ./dataset.csv

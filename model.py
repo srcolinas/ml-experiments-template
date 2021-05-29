@@ -4,6 +4,7 @@ Here we code what our model is. It may include all of feature engineering.
 import typing as t
 
 import numpy as np
+import pandas as pd
 from sklearn.base import BaseEstimator, RegressorMixin, TransformerMixin
 from sklearn.compose import ColumnTransformer
 from sklearn.ensemble import RandomForestRegressor
@@ -33,6 +34,7 @@ def get_estimator_mapping():
         "linear-regressor": LinearRegression,
         "age-extractor": AgeExtractor,
         "ignore-and-encode-transformer": IgnoreAndEncodeTransformer,
+        "average-per-neighborhood-baseline": AveragePerNeighborhoodBaseline,
     }
 
 
@@ -74,6 +76,27 @@ class IgnoreAndEncodeTransformer(BaseEstimator, TransformerMixin):
     _ordinal_encoder_categories = (
         ("Street", np.array(["Grvl", "Pave"])),
         ("CentralAir", np.array(["N", "Y"])),
+        ("MSSubClass", np.array([])),
+        ("MSZoning", np.array([])),
+        ("Alley", np.array([])),
+        ("LotShape", np.array([])),
+        ("LandContour", np.array([])),
+        ("Utilities", np.array([])),
+        ("LotConfig", np.array([])),
+        ("LandSlope", np.array([])),
+        ("Neighborhood", np.array([])),
+        ("Condition1", np.array([])),
+        ("Condition2", np.array([])),
+        ("BldgType", np.array([])),
+        ("HouseStyle", np.array([])),
+        ("RoofStyle", np.array([])),
+        ("RoofMatl", np.array([])),
+        ("", np.array([])),
+        ("", np.array([])),
+        ("", np.array([])),
+        ("", np.array([])),
+        ("", np.array([])),
+        ("", np.array([])),
         ("", np.array([])),
         ("", np.array([])),
         ("", np.array([])),
@@ -93,14 +116,11 @@ class IgnoreAndEncodeTransformer(BaseEstimator, TransformerMixin):
     )
 
     def __init__(self):
+        column_names, categories = zip(*type(self)._ordinal_encoder_categories)
         self._column_transformer = ColumnTransformer(
             transformers=[
                 ("droper", "drop", type(self)._ignored_columns),
-                (
-                    "encoder",
-                    OrdinalEncoder(categories=type(self)._ordinal_encoder_categories),
-                    type(self)._binary_columns + type(self)._categorical_columns,
-                ),
+                ("encoder", OrdinalEncoder(categories=categories), column_names),
             ],
             remainder="drop",
         )
@@ -113,11 +133,22 @@ class IgnoreAndEncodeTransformer(BaseEstimator, TransformerMixin):
         return self._column_transformer.transform(X)
 
 
-class ModePerNeighborBaseline(BaseEstimator, RegressorMixin):
+class AveragePerNeighborhoodBaseline(BaseEstimator, RegressorMixin):
     def fit(self, X, y):
         """Computes the mode of the price per neighbor on training data."""
-        raise NotImplementedError
+        df = pd.DataFrame({"Neighborhood": X["Neighborhood"], "price": y})
+        self.means_ = df.groupby("Neighborhood").mean().to_dict()["price"]
+        self.global_mean_ = y.mean()
+        return self
 
     def predict(self, X):
         """Predicts the mode computed in the fit method."""
-        raise NotImplementedError
+
+        def get_average(x):
+            if x in self.means_:
+                return self.means_[x]
+            else:
+                return self.global_mean_
+
+        y_pred = X["Neighborhood"].apply(get_average)
+        return y_pred
