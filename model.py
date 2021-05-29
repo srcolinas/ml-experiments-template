@@ -34,6 +34,7 @@ def get_estimator_mapping():
         "linear-regressor": LinearRegression,
         "age-extractor": AgeExtractor,
         "ignore-and-encode-transformer": IgnoreAndEncodeTransformer,
+        "one-hot-encoder": OneHotEncoder,
         "average-per-neighborhood-baseline": AveragePerNeighborhoodBaseline,
     }
 
@@ -120,7 +121,11 @@ class IgnoreAndEncodeTransformer(BaseEstimator, TransformerMixin):
         self._column_transformer = ColumnTransformer(
             transformers=[
                 ("droper", "drop", type(self)._ignored_columns),
-                ("encoder", OrdinalEncoder(categories=categories), column_names),
+                (
+                    "encoder",
+                    OrdinalEncoder(categories="auto", handle_unknown="use_encoded_value", unknown_value=100),
+                    type(self)._binary_columns + type(self)._categorical_columns,
+                ),
             ],
             remainder="drop",
         )

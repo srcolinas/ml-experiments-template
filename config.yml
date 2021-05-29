@@ -1,5 +1,10 @@
 estimator:
-  - name: average-per-neighborhood-baseline
+  - name: age-extractor
+  - name: ignore-and-encode-transformer
+  - name: one-hot-encoder
+    params:
+      sparse: false
+  - name: linear-regressor
 
 data:
   filepath: ./dataset.csv
