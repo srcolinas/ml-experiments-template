@@ -71,17 +71,26 @@ class IgnoreAndEncodeTransformer(BaseEstimator, TransformerMixin):
 
     _ignored_columns = "YrSold,YearBuilt,YearRemodAdd,GarageYrBlt".split(",")
 
-    _ordinal_encoder_categories = [
-        np.array(["Grvl", "Pave"]),
-        np.array(["N", "Y"]),
-        np.array([]),
-        np.array([]),
-        np.array([]),
-        np.array([]),
-        np.array([]),
-        np.array([]),
-        np.array([]),
-    ]
+    _ordinal_encoder_categories = (
+        ("Street", np.array(["Grvl", "Pave"])),
+        ("CentralAir", np.array(["N", "Y"])),
+        ("", np.array([])),
+        ("", np.array([])),
+        ("", np.array([])),
+        ("", np.array([])),
+        ("", np.array([])),
+        ("", np.array([])),
+        ("", np.array([])),
+        ("", np.array([])),
+        ("", np.array([])),
+        ("", np.array([])),
+        ("", np.array([])),
+        ("", np.array([])),
+        ("", np.array([])),
+        ("", np.array([])),
+        ("", np.array([])),
+        ("", np.array([])),
+    )
 
     def __init__(self):
         self._column_transformer = ColumnTransformer(
