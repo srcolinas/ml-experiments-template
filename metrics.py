@@ -8,7 +8,7 @@ from sklearn.metrics import mean_absolute_error, make_scorer
 
 def get_metric_name_mapping():
     return {
-        _mae(): mean_absolute_error
+        _mae(): mean_absolute_error,
         _cm(): custom_error
     }
 

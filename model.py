@@ -31,7 +31,7 @@ def get_estimator_mapping():
         "random-forest-regressor": RandomForestRegressor,
         "linear-regressor": LinearRegression,
         "age-extractor": AgeExtractor,
-        "column-transformer": CustomColumnTransformer,
+        "ignore-and-encode-transformer": IgnoreAndEncodeTransformer,
     }
 
 
@@ -47,7 +47,7 @@ class AgeExtractor(BaseEstimator, TransformerMixin):
         return X
 
 
-class CustomColumnTransformer(BaseEstimator, TransformerMixin):
+class IgnoreAndEncodeTransformer(BaseEstimator, TransformerMixin):
     _categorical_columns = (
         "MSSubClass,MSZoning,Alley,LotShape,LandContour,Utilities,LotConfig,LandSlope,"
         + "Neighborhood,Condition1,Condition2,BldgType,HouseStyle,RoofStyle,RoofMatl,"
@@ -71,16 +71,11 @@ class CustomColumnTransformer(BaseEstimator, TransformerMixin):
     _ignored_columns = "YrSold,YearBuilt,YearRemodAdd,GarageYrBlt".split(",")
 
     def __init__(self):
+        categories = [] # fill with proper value
         self._column_transformer = ColumnTransformer(
             transformers=[
                 ("droper", "drop", type(self)._ignored_columns),
-                ("binarizer", OrdinalEncoder(), type(self)._binary_columns),
-                (
-                    "one_hot_encoder",
-                    OneHotEncoder(handle_unknown="ignore", sparse=False),
-                    type(self)._categorical_columns,
-                ),
-                ("scaler", StandardScaler(), type(self)._float_columns),
+                ("encoder", OrdinalEncoder(categories=categories), type(self)._binary_columns + type(self)._categorical_columns),
             ],
             remainder="drop",
         )
