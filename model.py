@@ -1,9 +1,9 @@
-
 """
 Here we code what our model is. It may include all of feature engineering.
 """
 import typing as t
 
+import numpy as np
 from sklearn.base import BaseEstimator, RegressorMixin, TransformerMixin
 from sklearn.compose import ColumnTransformer
 from sklearn.ensemble import RandomForestRegressor
@@ -13,6 +13,7 @@ from sklearn.preprocessing import OneHotEncoder, OrdinalEncoder, StandardScaler
 
 
 EstimatorConfig = t.List[t.Dict[str, t.Any]]
+
 
 def build_estimator(config: EstimatorConfig):
     estimator_mapping = get_estimator_mapping()
@@ -70,12 +71,27 @@ class IgnoreAndEncodeTransformer(BaseEstimator, TransformerMixin):
 
     _ignored_columns = "YrSold,YearBuilt,YearRemodAdd,GarageYrBlt".split(",")
 
+    _ordinal_encoder_categories = [
+        np.array(["Grvl", "Pave"]),
+        np.array(["N", "Y"]),
+        np.array([]),
+        np.array([]),
+        np.array([]),
+        np.array([]),
+        np.array([]),
+        np.array([]),
+        np.array([]),
+    ]
+
     def __init__(self):
-        categories = [] # fill with proper value
         self._column_transformer = ColumnTransformer(
             transformers=[
                 ("droper", "drop", type(self)._ignored_columns),
-                ("encoder", OrdinalEncoder(categories=categories), type(self)._binary_columns + type(self)._categorical_columns),
+                (
+                    "encoder",
+                    OrdinalEncoder(categories=type(self)._ordinal_encoder_categories),
+                    type(self)._binary_columns + type(self)._categorical_columns,
+                ),
             ],
             remainder="drop",
         )
@@ -90,9 +106,9 @@ class IgnoreAndEncodeTransformer(BaseEstimator, TransformerMixin):
 
 class ModePerNeighborBaseline(BaseEstimator, RegressorMixin):
     def fit(self, X, y):
-        """Computes the mode of the price per neighbor on training data. """
+        """Computes the mode of the price per neighbor on training data."""
         raise NotImplementedError
 
     def predict(self, X):
-        """Predicts the mode computed in the fit method. """
+        """Predicts the mode computed in the fit method."""
         raise NotImplementedError
