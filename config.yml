@@ -1,10 +1,14 @@
 estimator:
   - name: age-extractor
-  - name: ignore-and-encode-transformer
-  - name: one-hot-encoder
+    params: {}
+  - name: categorical-encoder
     params:
-      sparse: false
+      one_hot: true
+      force_dense_array: true
+  - name: standard-scaler
+    params: {}
   - name: linear-regressor
+    params: {}
 
 data:
   filepath: ./dataset.csv

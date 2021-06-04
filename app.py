@@ -31,7 +31,7 @@ def train(config_file: str):
     estimator = model.build_estimator(estimator_config)
     estimator.fit(X, y)
     output_dir = _load_config(config_file, "export")["output_dir"]
-    version = _save_versioned_estimator(estimator, estimator_config, output_dir)
+    _save_versioned_estimator(estimator, estimator_config, output_dir)
 
 
 def _get_dataset(data_config, splits):
@@ -43,7 +43,7 @@ def _get_dataset(data_config, splits):
 def _save_versioned_estimator(
     estimator: BaseEstimator, config: model.EstimatorConfig, output_dir: str
 ):
-    version = str(datetime.now(timezone.utc).replace(second=0, microsecond=0))
+    version = datetime.now(timezone.utc).strftime("%Y-%m-%d %H-%M")
     model_dir = os.path.join(output_dir, version)
     os.makedirs(model_dir, exist_ok=True)
     try:
@@ -52,7 +52,6 @@ def _save_versioned_estimator(
     except Exception as e:
         typer.echo(f"Coudln't serialize model due to error {e}")
         shutil.rmtree(model_dir)
-    return version
 
 
 @app.command()
@@ -99,9 +98,7 @@ def _param_grid_to_custom_format(param_grid):
             grid[estimator_name] = {}
         grid[estimator_name][param_name] = values
     result = grid
-    result = [
-        {"name": name, "hparams": params} for name, params in grid.items()
-    ]
+    result = [{"name": name, "hparams": params} for name, params in grid.items()]
     return result
 
 
