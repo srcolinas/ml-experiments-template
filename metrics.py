@@ -11,7 +11,12 @@ def get_metric_name_mapping():
 
 
 def custom_error(
-    y_true, y_pred, *, overflow_cost: float = 0.7, underflow_cost: float = 0.3
+    y_true,
+    y_pred,
+    *,
+    overflow_cost: float = 0.7,
+    underflow_cost: float = 0.3,
+    aggregate: bool = True
 ):
     """A custom metric that is related to the business, the lower the better."""
     diff = y_true - y_pred  # negative if predicted value is greater than true value
@@ -20,7 +25,9 @@ def custom_error(
     sample_weight[mask_underflow] = underflow_cost
     mask_overflow = diff <= 0
     sample_weight[mask_overflow] = overflow_cost
-    return mean_absolute_error(y_true, y_pred, sample_weight=sample_weight)
+    if aggregate:
+        return mean_absolute_error(y_true, y_pred, sample_weight=sample_weight)
+    return np.abs(diff * sample_weight)
 
 
 def get_metric_function(name: str, **params):
@@ -34,7 +41,8 @@ def get_metric_function(name: str, **params):
 
 def get_scoring_function(name: str, **params):
     mapping = {
-        _mae(): make_scorer(mean_absolute_error, greater_is_better=False, **params)
+        _mae(): make_scorer(mean_absolute_error, greater_is_better=False, **params),
+        _cm(): make_scorer(custom_error, greater_is_better=False, **params),
     }
     return mapping[name]
 

@@ -9,7 +9,7 @@ import pandas as pd
 from sklearn.base import BaseEstimator, RegressorMixin, TransformerMixin
 from sklearn.preprocessing import PolynomialFeatures, KBinsDiscretizer
 from sklearn.compose import ColumnTransformer
-from sklearn.tree import DecisionTreeClassifier
+from sklearn.tree import DecisionTreeRegressor
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.linear_model import LinearRegression, Ridge
 from sklearn.pipeline import Pipeline
@@ -36,6 +36,7 @@ def build_estimator(config: EstimatorConfig):
 def get_estimator_mapping():
     return {
         "random-forest-regressor": RandomForestRegressor,
+        "decision-tree-regressor": DecisionTreeRegressor,
         "linear-regressor": LinearRegression,
         "ridge-regressor": Ridge,
         "average-price-per-neighborhood-regressor": AveragePricePerNeighborhoodRegressor,
@@ -172,8 +173,11 @@ class CategoricalEncoder(BaseEstimator, TransformerMixin):
                 pass_through_columns + self.additional_pass_through_columns
             )
         to_ignore = set(self.to_ignore) if self.to_ignore is not None else set()
+        if self.additional_categories is not None:
+            to_ignore = to_ignore.union(self.additional_categories.keys())
         pass_through_columns = tuple(
-            v for v in pass_through_columns if v not in self.additional_categories and v not in to_ignore
+            v
+            for v in pass_through_columns if v not in to_ignore
         )
         return pass_through_columns
 
