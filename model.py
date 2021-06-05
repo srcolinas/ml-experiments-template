@@ -7,6 +7,7 @@ from functools import partial
 import numpy as np
 import pandas as pd
 from sklearn.base import BaseEstimator, RegressorMixin, TransformerMixin
+from sklearn.preprocessing import PolynomialFeatures, KBinsDiscretizer
 from sklearn.compose import ColumnTransformer
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.linear_model import LinearRegression
@@ -39,7 +40,42 @@ def get_estimator_mapping():
         "age-extractor": AgeExtractor,
         "categorical-encoder": CategoricalEncoder,
         "standard-scaler": StandardScaler,
+        "discretizer": _get_discretizer,
+        "crosser": _get_crosser,
+        "averager": AveragePricePerNeighborhoodExtractor,
     }
+
+
+def _get_discretizer(
+    *,
+    bins_per_column: t.Mapping[str, int],
+    encode: str = "onehot",
+    stratey: str = "quantile",
+):
+    columns, n_bins = zip(*bins_per_column.items())
+    transformer = ColumnTransformer(
+        [
+            (
+                "discretizer",
+                KBinsDiscretizer(n_bins=n_bins, encode=encode, strategy=stratey),
+                columns,
+            )
+        ],
+        remainder="drop",
+    )
+
+    return transformer
+
+
+def _get_crosser(
+    *,
+    columns: t.Sequence[int],
+):
+    transformer = ColumnTransformer(
+        ("crosser", PolynomialFeatures(interaction_only=True), columns),
+        remainder="passthrough",
+    )
+    return transformer
 
 
 class AgeExtractor(BaseEstimator, TransformerMixin):
@@ -55,9 +91,16 @@ class AgeExtractor(BaseEstimator, TransformerMixin):
 
 
 class CategoricalEncoder(BaseEstimator, TransformerMixin):
-    def __init__(self, *, one_hot: bool = False, force_dense_array: bool = False):
+    def __init__(
+        self,
+        *,
+        one_hot: bool = False,
+        force_dense_array: bool = False,
+        pass_through_columns: t.Optional[t.Sequence[str]] = None,
+    ):
         self.one_hot = one_hot
         self.force_dense_array = force_dense_array
+        self.pass_through_columns = pass_through_columns
         self.categorical_column_names = (
             data.get_binary_column_names() + data.get_categorical_column_names()
         )
@@ -65,7 +108,11 @@ class CategoricalEncoder(BaseEstimator, TransformerMixin):
         self.categories = [mapping[k] for k in self.categorical_column_names]
 
     def fit(self, X, y=None):
+        X = X.copy()
         self.n_features_in_ = X.shape[1]
+        pass_through_columns = data.get_numeric_column_names()
+        if self.pass_through_columns is not None:
+            pass_through_columns = pass_through_columns + self.pass_through_columns
         encoder_cls = (
             partial(OneHotEncoder, drop="first", sparse=not self.force_dense_array)
             if self.one_hot
@@ -80,7 +127,7 @@ class CategoricalEncoder(BaseEstimator, TransformerMixin):
                     ),
                     self.categorical_column_names,
                 ),
-                ("pass-numeric", "passthrough", data.get_numeric_column_names()),
+                ("pass-numeric", "passthrough", pass_through_columns),
             ],
             remainder="drop",
         )
@@ -110,3 +157,21 @@ class AveragePricePerNeighborhoodRegressor(BaseEstimator, RegressorMixin):
 
         y_pred = X["Neighborhood"].apply(get_average)
         return y_pred
+
+
+class AveragePricePerNeighborhoodExtractor(BaseEstimator, TransformerMixin):
+    def fit(self, X, y):
+        df = pd.DataFrame({"Neighborhood": X["Neighborhood"], "price": y})
+        self.means_ = df.groupby("Neighborhood").mean().to_dict()["price"]
+        self.global_mean_ = y.mean()
+        return self
+
+    def transform(self, X):
+        def get_average(x):
+            if x in self.means_:
+                return self.means_[x]
+            else:
+                return self.global_mean_
+
+        X["AveragePriceInNeihborhood"] = X["Neighborhood"].apply(get_average)
+        return X

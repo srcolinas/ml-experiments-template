@@ -5,6 +5,10 @@ estimator:
     params:
       one_hot: true
       force_dense_array: true
+      pass_through_columns:
+        - HouseAge
+        - RemodAddAge
+        - GarageAge
   - name: standard-scaler
     params: {}
   - name: linear-regressor
