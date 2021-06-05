@@ -21,8 +21,10 @@ SplitName = te.Literal["train", "test"]
 def get_dataset(reader: DatasetReader, splits: t.Iterable[SplitName]):
     df = reader()
     df = clean_dataset(df)
+
     y = df["SalePrice"]
     X = df.drop(columns=["SalePrice", "Id"])
+    X = X.astype({k: str for k in get_categorical_variables_values_mapping().keys()})
     X_train, X_test, y_train, y_test = train_test_split(
         X, y, test_size=0.3, random_state=1
     )

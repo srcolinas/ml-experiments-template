@@ -1,14 +1,23 @@
 estimator:
   - name: age-extractor
     params: {}
+  - name: discretizer
+    params:
+      bins_per_column:
+        LotFrontage: 5
+        LotArea: 3
+      strategy: quantile
   - name: categorical-encoder
     params:
       one_hot: true
       force_dense_array: true
-      pass_through_columns:
+      additional_pass_through_columns:
         - HouseAge
         - RemodAddAge
         - GarageAge
+      additional_categories:
+        LotFrontage: [0.0, 1.0, 2.0, 3.0, 4.0]
+        LotArea: [0.0, 1.0, 2.0]
   - name: standard-scaler
     params: {}
   - name: linear-regressor
@@ -24,10 +33,9 @@ metrics:
 search:
   jobs: -1
   grid:
-    - name: random-forest-regressor
+    - name: ridge-regressor
       params:
-        n_estimators: [50, 100, 200]
-        max_depth: [null, 10, 20, 30, 60]
+        alpha: [0.001, 0.01, 0.1, 1, 10, 100, 1000]
 
 export:
   output_dir: ./models
